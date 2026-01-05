@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Customer မှတ်တမ်း</title>
+    <title>Customer မှတ်တမ်း (Online)</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -31,35 +31,34 @@
             padding-bottom: 80px;
         }
 
-        /* --- Header Adjusted for Perfect Alignment --- */
+        /* --- Header --- */
         header {
             max-width: 600px;
             margin: 0 auto 20px;
             display: flex;
             justify-content: space-between;
-            align-items: center; /* Vertically center items */
+            align-items: center;
             background: white;
-            padding: 12px 18px; /* Slimmer padding */
+            padding: 12px 18px;
             border-radius: 14px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.03);
         }
 
         h1 {
-            font-size: 1.1rem; /* Slightly smaller for balance */
+            font-size: 1.1rem;
             font-weight: 700;
             color: var(--primary);
             margin: 0;
-            line-height: 1; /* Fix vertical alignment */
+            line-height: 1;
         }
 
-        /* Slimmer Add Button */
         .add-btn {
             background-color: var(--primary);
             color: white;
             border: none;
-            padding: 8px 16px; /* Reduced padding */
+            padding: 8px 16px;
             border-radius: 50px;
-            font-size: 0.85rem; /* Smaller font */
+            font-size: 0.85rem;
             font-weight: 500;
             cursor: pointer;
             box-shadow: 0 3px 8px rgba(79, 70, 229, 0.25);
@@ -76,7 +75,7 @@
             max-width: 600px;
             margin: 0 auto;
             display: grid;
-            gap: 12px; /* Smaller gap */
+            gap: 12px;
         }
 
         .card {
@@ -91,27 +90,19 @@
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card-header {
-            margin-bottom: 8px;
-        }
+        .card-header { margin-bottom: 8px; }
+        .customer-name { font-size: 1.05rem; font-weight: 700; color: var(--text-main); }
 
-        .customer-name {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-
-        /* *** KEY CHANGE: white-space: pre-wrap *** */
         .card-info {
             background: var(--bg-color);
             padding: 10px 12px;
             border-radius: 8px;
-            font-size: 0.9rem; /* Smaller text */
+            font-size: 0.9rem;
             color: #4b5563;
             line-height: 1.6;
             margin-bottom: 12px;
-            white-space: pre-wrap; /* Preserves line breaks/Enters */
-            word-break: break-word; /* Prevents long words breaking layout */
+            white-space: pre-wrap; 
+            word-break: break-word; 
         }
 
         .card-link {
@@ -149,93 +140,80 @@
         .edit-btn { color: var(--primary); }
         .delete-btn { color: var(--danger); }
 
+        /* --- Loading Indicator --- */
+        #loader {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.8);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         /* --- Load More --- */
         .load-more-btn {
-            display: block;
-            margin: 20px auto;
-            padding: 8px 20px;
-            background: white;
-            border: 1px solid var(--primary);
-            color: var(--primary);
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9rem;
+            display: block; margin: 20px auto; padding: 8px 20px;
+            background: white; border: 1px solid var(--primary);
+            color: var(--primary); border-radius: 50px; cursor: pointer;
+            font-weight: 600; font-size: 0.9rem;
         }
 
         /* --- MODALS --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(2px);
-            z-index: 1000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
+            z-index: 1000; display: none;
+            justify-content: center; align-items: center; padding: 20px;
         }
         .modal-overlay.active { display: flex; animation: fadeOverlay 0.2s; }
         @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
 
         .modal-box {
-            background: white;
-            width: 100%;
-            max-width: 360px; /* Slimmer Modal */
-            border-radius: 18px;
-            padding: 20px;
+            background: white; width: 100%; max-width: 360px;
+            border-radius: 18px; padding: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            transform: scale(0.9);
-            transition: transform 0.2s;
+            transform: scale(0.9); transition: transform 0.2s;
         }
         .modal-overlay.active .modal-box { transform: scale(1); }
-
-        .modal-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 15px;
-            text-align: center;
-            color: var(--text-main);
-        }
-
+        
+        .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; text-align: center; color: var(--text-main); }
         .form-group { margin-bottom: 12px; }
         .form-label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; color: var(--text-sub); }
         .form-input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #E5E7EB;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            outline: none;
-            transition: border-color 0.2s;
+            width: 100%; padding: 10px; border: 2px solid #E5E7EB;
+            border-radius: 10px; font-size: 0.9rem; outline: none; transition: border-color 0.2s;
         }
         .form-input:focus { border-color: var(--primary); }
 
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .btn-modal {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-modal { flex: 1; padding: 10px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
         .btn-cancel { background: #F3F4F6; color: var(--text-main); }
         .btn-confirm { background: var(--primary); color: white; }
         .btn-delete { background: var(--danger); color: white; }
-
         .empty-state { text-align: center; color: var(--text-sub); margin-top: 50px; }
-
     </style>
 </head>
 <body>
 
+    <div id="loader" style="display: none;">
+        <div class="spinner"></div>
+        <p>Connecting...</p>
+    </div>
+
     <header>
-        <h1><i class="fa-solid fa-address-book"></i> Customer စာရင်း</h1>
+        <h1><i class="fa-solid fa-cloud"></i> Customer စာရင်း</h1>
         <button class="add-btn" onclick="openAddModal()">
             <i class="fa-solid fa-plus"></i> အသစ်ထည့်ရန်
         </button>
@@ -252,22 +230,18 @@
             <h2 class="modal-title" id="formTitle">စာရင်းအသစ်ထည့်မည်</h2>
             <form id="dataForm">
                 <input type="hidden" id="editId">
-                
                 <div class="form-group">
                     <label class="form-label">အမည်</label>
                     <input type="text" id="nameInput" class="form-input" placeholder="Name" required>
                 </div>
-                
                 <div class="form-group">
                     <label class="form-label">အချက်အလက်</label>
-                    <textarea id="infoInput" class="form-input" rows="4" placeholder="Description (Enter ခေါက်၍ ရေးနိုင်သည်)" required></textarea>
+                    <textarea id="infoInput" class="form-input" rows="4" placeholder="Description" required></textarea>
                 </div>
-
                 <div class="form-group">
                     <label class="form-label">Link (ရှိလျှင်ထည့်ပါ)</label>
                     <input type="url" id="linkInput" class="form-input" placeholder="https://...">
                 </div>
-
                 <div class="modal-actions">
                     <button type="button" class="btn-modal btn-cancel" onclick="closeFormModal()">မလုပ်ပါ</button>
                     <button type="submit" class="btn-modal btn-confirm">သိမ်းမည်</button>
@@ -283,7 +257,6 @@
             </div>
             <h2 class="modal-title" style="margin-bottom: 5px;">ဖျက်မှာသေချာလား?</h2>
             <p style="color: var(--text-sub); font-size: 0.9rem; margin-bottom: 20px;">ပြန်ယူလို့ရတော့မှာ မဟုတ်ပါ။</p>
-            
             <div class="modal-actions">
                 <button class="btn-modal btn-cancel" onclick="closeDeleteModal()">မဖျက်ပါ</button>
                 <button class="btn-modal btn-delete" onclick="confirmDelete()">ဖျက်မည်</button>
@@ -292,39 +265,91 @@
     </div>
 
     <script>
-        // --- Generate ID ---
-        function generateId() {
-            return Date.now().toString(36) + Math.random().toString(36).substr(2);
-        }
+    function _0x(h) {
+        var s = '';
+        for (var i = 0; i < h.length; i += 2) 
+            s += String.fromCharCode(parseInt(h.substr(i, 2), 16));
+        return s;
+    }
 
-        // --- Data State ---
-        let customers = JSON.parse(localStorage.getItem('myCustomers')) || [];
+    const _b_id = "363935633434666364306561383831663430353663646261"; 
+    const _k_ey = "24326224313024725550784649512e6a5637746438643938623876484f58746f53657353657378744f43587338694733616e5467364c61516b703471";
 
-        // *** Migration: Fix old data without IDs ***
-        let dataNeedsUpdate = false;
-        customers = customers.map(c => {
-            if (!c.id) {
-                c.id = generateId();
-                dataNeedsUpdate = true;
-            }
-            return c;
-        });
-        if (dataNeedsUpdate) {
-            localStorage.setItem('myCustomers', JSON.stringify(customers));
-        }
+    const BIN_ID = _0x(_b_id);
+    const API_KEY = _0x(_k_ey);
 
+        const BASE_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+        
+        // State
+        let customers = [];
         let itemsToShow = 10;
         const itemsPerLoad = 10;
         let deleteTargetId = null;
 
-        // --- Elements ---
+        // Elements
         const container = document.getElementById('cardContainer');
         const loadMoreBtn = document.getElementById('loadMoreBtn');
+        const loader = document.getElementById('loader');
+        
         const formModal = document.getElementById('formModal');
         const form = document.getElementById('dataForm');
         const formTitle = document.getElementById('formTitle');
         const editIdInput = document.getElementById('editId');
         const deleteModal = document.getElementById('deleteModal');
+
+        // Generate ID
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        // --- JSONBIN FUNCTIONS ---
+
+        // 1. Fetch Data from Cloud
+        async function fetchFromCloud() {
+            showLoader(true);
+            try {
+                const response = await fetch(`${BASE_URL}/latest`, {
+                    headers: { 'X-Master-Key': API_KEY }
+                });
+                if(!response.ok) throw new Error("Connection Failed");
+                const data = await response.json();
+                
+                // JSONBin stores data in data.record
+                customers = Array.isArray(data.record) ? data.record : [];
+                renderCards();
+            } catch (error) {
+                console.error(error);
+                alert("Data ဆွဲမရပါ၊ အင်တာနက်စစ်ဆေးပါ သို့မဟုတ် Key မှားနေပါသည်။");
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        // 2. Save Data to Cloud
+        async function saveToCloud() {
+            showLoader(true);
+            try {
+                const response = await fetch(BASE_URL, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': API_KEY
+                    },
+                    body: JSON.stringify(customers)
+                });
+                if(!response.ok) throw new Error("Save Failed");
+                renderCards();
+            } catch (error) {
+                console.error(error);
+                alert("သိမ်းမရပါ၊ အင်တာနက်စစ်ဆေးပါ။");
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        function showLoader(show) {
+            loader.style.display = show ? 'flex' : 'none';
+        }
 
         // --- RENDER ---
         function renderCards() {
@@ -333,8 +358,8 @@
             if (customers.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <i class="fa-regular fa-folder-open" style="font-size: 2.5rem; margin-bottom: 10px; opacity:0.5;"></i>
-                        <p style="font-size: 0.9rem;">စာရင်းသွင်းထားခြင်း မရှိသေးပါ</p>
+                        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.5rem; margin-bottom: 10px; opacity:0.5;"></i>
+                        <p style="font-size: 0.9rem;">Online စာရင်း မရှိသေးပါ</p>
                     </div>`;
                 loadMoreBtn.style.display = 'none';
                 return;
@@ -379,18 +404,12 @@
             renderCards();
         }
 
-        function saveToStorage() {
-            localStorage.setItem('myCustomers', JSON.stringify(customers));
-            renderCards();
-        }
-
-        // --- FORM MODAL ---
+        // --- FORM & ACTIONS ---
         function openAddModal() {
             form.reset();
             editIdInput.value = '';
             formTitle.innerText = "စာရင်းအသစ်ထည့်မည်";
             formModal.classList.add('active');
-            setTimeout(() => document.getElementById('nameInput').focus(), 100);
         }
 
         function openEditModal(id) {
@@ -400,7 +419,6 @@
                 document.getElementById('infoInput').value = customer.info;
                 document.getElementById('linkInput').value = customer.link || '';
                 editIdInput.value = customer.id;
-                
                 formTitle.innerText = "စာရင်းပြင်ဆင်မည်";
                 formModal.classList.add('active');
             }
@@ -411,10 +429,8 @@
             form.reset();
         }
 
-        // --- SAVE ---
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const name = document.getElementById('nameInput').value;
             const info = document.getElementById('infoInput').value;
             const link = document.getElementById('linkInput').value;
@@ -427,12 +443,12 @@
                 customers.push({ id: generateId(), name, info, link });
                 itemsToShow = itemsPerLoad; 
             }
-
-            saveToStorage();
+            
             closeFormModal();
+            await saveToCloud(); // Save to JSONBin
         });
 
-        // --- DELETE MODAL ---
+        // --- DELETE ---
         function openDeleteModal(id) {
             deleteTargetId = id;
             deleteModal.classList.add('active');
@@ -443,14 +459,14 @@
             deleteTargetId = null;
         }
 
-        function confirmDelete() {
+        async function confirmDelete() {
             if (deleteTargetId) {
                 customers = customers.filter(c => c.id !== deleteTargetId);
                 if (itemsToShow > customers.length && customers.length > 0) {
                      itemsToShow = Math.ceil(customers.length / itemsPerLoad) * itemsPerLoad;
                 }
-                saveToStorage();
                 closeDeleteModal();
+                await saveToCloud(); // Save to JSONBin
             }
         }
 
@@ -459,7 +475,8 @@
             if (event.target == deleteModal) closeDeleteModal();
         }
 
-        renderCards();
+        // Initial Fetch
+        fetchFromCloud();
 
     </script>
 </body>
