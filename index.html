@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Customer မှတ်တမ်း</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-light: #EEF2FF;
+            --bg-color: #F9FAFB;
+            --text-main: #1F2937;
+            --text-sub: #6B7280;
+            --danger: #EF4444;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Poppins', 'Padauk', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+
+        /* --- Header Adjusted for Perfect Alignment --- */
+        header {
+            max-width: 600px;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* Vertically center items */
+            background: white;
+            padding: 12px 18px; /* Slimmer padding */
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+
+        h1 {
+            font-size: 1.1rem; /* Slightly smaller for balance */
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0;
+            line-height: 1; /* Fix vertical alignment */
+        }
+
+        /* Slimmer Add Button */
+        .add-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px; /* Reduced padding */
+            border-radius: 50px;
+            font-size: 0.85rem; /* Smaller font */
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(79, 70, 229, 0.25);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: transform 0.2s;
+            line-height: 1;
+        }
+        .add-btn:active { transform: scale(0.95); }
+
+        /* --- Grid & Cards --- */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            display: grid;
+            gap: 12px; /* Smaller gap */
+        }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            position: relative;
+            overflow: hidden;
+            border-left: 4px solid var(--primary);
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card-header {
+            margin-bottom: 8px;
+        }
+
+        .customer-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* *** KEY CHANGE: white-space: pre-wrap *** */
+        .card-info {
+            background: var(--bg-color);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem; /* Smaller text */
+            color: #4b5563;
+            line-height: 1.6;
+            margin-bottom: 12px;
+            white-space: pre-wrap; /* Preserves line breaks/Enters */
+            word-break: break-word; /* Prevents long words breaking layout */
+        }
+
+        .card-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            color: var(--primary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: var(--primary-light);
+            padding: 5px 10px;
+            border-radius: 15px;
+            margin-bottom: 12px;
+        }
+
+        .card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            border-top: 1px solid #f3f4f6;
+            padding-top: 10px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .edit-btn { color: var(--primary); }
+        .delete-btn { color: var(--danger); }
+
+        /* --- Load More --- */
+        .load-more-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 8px 20px;
+            background: white;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* --- MODALS --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(2px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; animation: fadeOverlay 0.2s; }
+        @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
+
+        .modal-box {
+            background: white;
+            width: 100%;
+            max-width: 360px; /* Slimmer Modal */
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transform: scale(0.9);
+            transition: transform 0.2s;
+        }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+            color: var(--text-main);
+        }
+
+        .form-group { margin-bottom: 12px; }
+        .form-label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; color: var(--text-sub); }
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #E5E7EB;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: var(--primary); }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn-modal {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .btn-cancel { background: #F3F4F6; color: var(--text-main); }
+        .btn-confirm { background: var(--primary); color: white; }
+        .btn-delete { background: var(--danger); color: white; }
+
+        .empty-state { text-align: center; color: var(--text-sub); margin-top: 50px; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><i class="fa-solid fa-address-book"></i> Customer စာရင်း</h1>
+        <button class="add-btn" onclick="openAddModal()">
+            <i class="fa-solid fa-plus"></i> အသစ်ထည့်ရန်
+        </button>
+    </header>
+
+    <div class="container" id="cardContainer"></div>
+    
+    <button id="loadMoreBtn" class="load-more-btn" onclick="loadMore()" style="display:none;">
+        See More <i class="fa-solid fa-angle-down"></i>
+    </button>
+
+    <div class="modal-overlay" id="formModal">
+        <div class="modal-box">
+            <h2 class="modal-title" id="formTitle">စာရင်းအသစ်ထည့်မည်</h2>
+            <form id="dataForm">
+                <input type="hidden" id="editId">
+                
+                <div class="form-group">
+                    <label class="form-label">အမည်</label>
+                    <input type="text" id="nameInput" class="form-input" placeholder="Name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">အချက်အလက်</label>
+                    <textarea id="infoInput" class="form-input" rows="4" placeholder="Description (Enter ခေါက်၍ ရေးနိုင်သည်)" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Link (ရှိလျှင်ထည့်ပါ)</label>
+                    <input type="url" id="linkInput" class="form-input" placeholder="https://...">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-modal btn-cancel" onclick="closeFormModal()">မလုပ်ပါ</button>
+                    <button type="submit" class="btn-modal btn-confirm">သိမ်းမည်</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-box" style="text-align: center;">
+            <div style="color: var(--danger); font-size: 2.5rem; margin-bottom: 10px;">
+                <i class="fa-solid fa-circle-exclamation"></i>
+            </div>
+            <h2 class="modal-title" style="margin-bottom: 5px;">ဖျက်မှာသေချာလား?</h2>
+            <p style="color: var(--text-sub); font-size: 0.9rem; margin-bottom: 20px;">ပြန်ယူလို့ရတော့မှာ မဟုတ်ပါ။</p>
+            
+            <div class="modal-actions">
+                <button class="btn-modal btn-cancel" onclick="closeDeleteModal()">မဖျက်ပါ</button>
+                <button class="btn-modal btn-delete" onclick="confirmDelete()">ဖျက်မည်</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Generate ID ---
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        // --- Data State ---
+        let customers = JSON.parse(localStorage.getItem('myCustomers')) || [];
+
+        // *** Migration: Fix old data without IDs ***
+        let dataNeedsUpdate = false;
+        customers = customers.map(c => {
+            if (!c.id) {
+                c.id = generateId();
+                dataNeedsUpdate = true;
+            }
+            return c;
+        });
+        if (dataNeedsUpdate) {
+            localStorage.setItem('myCustomers', JSON.stringify(customers));
+        }
+
+        let itemsToShow = 10;
+        const itemsPerLoad = 10;
+        let deleteTargetId = null;
+
+        // --- Elements ---
+        const container = document.getElementById('cardContainer');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        const formModal = document.getElementById('formModal');
+        const form = document.getElementById('dataForm');
+        const formTitle = document.getElementById('formTitle');
+        const editIdInput = document.getElementById('editId');
+        const deleteModal = document.getElementById('deleteModal');
+
+        // --- RENDER ---
+        function renderCards() {
+            container.innerHTML = '';
+            
+            if (customers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-regular fa-folder-open" style="font-size: 2.5rem; margin-bottom: 10px; opacity:0.5;"></i>
+                        <p style="font-size: 0.9rem;">စာရင်းသွင်းထားခြင်း မရှိသေးပါ</p>
+                    </div>`;
+                loadMoreBtn.style.display = 'none';
+                return;
+            }
+
+            const visibleItems = [...customers].reverse().slice(0, itemsToShow);
+
+            visibleItems.forEach(customer => {
+                const linkHtml = customer.link 
+                    ? `<a href="${customer.link}" target="_blank" class="card-link"><i class="fa-solid fa-link"></i> Link သို့သွားရန်</a>` 
+                    : '';
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="customer-name">${customer.name}</div>
+                    </div>
+                    <div class="card-info">${customer.info}</div>
+                    ${linkHtml}
+                    <div class="card-actions">
+                        <button class="action-btn edit-btn" onclick="openEditModal('${customer.id}')">
+                            <i class="fa-solid fa-pen-to-square"></i> ပြင်မည်
+                        </button>
+                        <button class="action-btn delete-btn" onclick="openDeleteModal('${customer.id}')">
+                            <i class="fa-solid fa-trash-can"></i> ဖျက်မည်
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            if (itemsToShow >= customers.length) {
+                loadMoreBtn.style.display = 'none';
+            } else {
+                loadMoreBtn.style.display = 'block';
+            }
+        }
+
+        function loadMore() {
+            itemsToShow += itemsPerLoad;
+            renderCards();
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('myCustomers', JSON.stringify(customers));
+            renderCards();
+        }
+
+        // --- FORM MODAL ---
+        function openAddModal() {
+            form.reset();
+            editIdInput.value = '';
+            formTitle.innerText = "စာရင်းအသစ်ထည့်မည်";
+            formModal.classList.add('active');
+            setTimeout(() => document.getElementById('nameInput').focus(), 100);
+        }
+
+        function openEditModal(id) {
+            const customer = customers.find(c => c.id === id);
+            if (customer) {
+                document.getElementById('nameInput').value = customer.name;
+                document.getElementById('infoInput').value = customer.info;
+                document.getElementById('linkInput').value = customer.link || '';
+                editIdInput.value = customer.id;
+                
+                formTitle.innerText = "စာရင်းပြင်ဆင်မည်";
+                formModal.classList.add('active');
+            }
+        }
+
+        function closeFormModal() {
+            formModal.classList.remove('active');
+            form.reset();
+        }
+
+        // --- SAVE ---
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('nameInput').value;
+            const info = document.getElementById('infoInput').value;
+            const link = document.getElementById('linkInput').value;
+            const id = editIdInput.value;
+
+            if (id) {
+                const index = customers.findIndex(c => c.id === id);
+                if (index !== -1) customers[index] = { ...customers[index], name, info, link };
+            } else {
+                customers.push({ id: generateId(), name, info, link });
+                itemsToShow = itemsPerLoad; 
+            }
+
+            saveToStorage();
+            closeFormModal();
+        });
+
+        // --- DELETE MODAL ---
+        function openDeleteModal(id) {
+            deleteTargetId = id;
+            deleteModal.classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.remove('active');
+            deleteTargetId = null;
+        }
+
+        function confirmDelete() {
+            if (deleteTargetId) {
+                customers = customers.filter(c => c.id !== deleteTargetId);
+                if (itemsToShow > customers.length && customers.length > 0) {
+                     itemsToShow = Math.ceil(customers.length / itemsPerLoad) * itemsPerLoad;
+                }
+                saveToStorage();
+                closeDeleteModal();
+            }
+        }
+
+        window.onclick = function(event) {
+            if (event.target == formModal) closeFormModal();
+            if (event.target == deleteModal) closeDeleteModal();
+        }
+
+        renderCards();
+
+    </script>
+</body>
+</html>
