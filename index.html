@@ -64,7 +64,10 @@
             background: white; border-radius: 16px; padding: 18px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid var(--primary);
             position: relative;
+            animation: fadeIn 0.3s ease-in;
         }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
         .card-name { font-weight: 700; font-size: 1.1rem; margin-bottom: 8px; }
         .card-info { 
             background: #F9FAFB; padding: 10px; border-radius: 8px; 
@@ -84,13 +87,19 @@
         .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
         .btn-full { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; }
         
-        #loader { position: fixed; inset: 0; background: white; z-index: 2000; display: flex; justify-content: center; align-items: center; }
+        #loader { 
+            position: fixed; inset: 0; background: white; z-index: 2000; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+        }
 
     </style>
 </head>
 <body>
 
-    <div id="loader"><i class="fa-solid fa-circle-notch fa-spin fa-2x" style="color:var(--primary)"></i></div>
+    <div id="loader">
+        <i class="fa-solid fa-circle-notch fa-spin fa-2x" style="color:var(--primary)"></i>
+        <p style="margin-top:10px; font-size:0.9rem; color:#666;">စာရင်းများကို ဆွဲယူနေပါသည်...</p>
+    </div>
 
     <div id="loginScreen">
         <div class="auth-box">
@@ -141,14 +150,11 @@
     </div>
 
     <script type="module">
-        // Import Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // -----------------------------------------------------------
-        // မိတ်ဆွေ၏ Firebase Config (Updated)
-        // -----------------------------------------------------------
+        // Config 
         const firebaseConfig = {
           apiKey: "AIzaSyCyzN4nwSl9ReEwylS--PhwWb44l9WIWP0",
           authDomain: "c-list-6a134.firebaseapp.com",
@@ -158,51 +164,44 @@
           appId: "1:456688105100:web:88f78e0ab2aa3cc38e2da9"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // State
         let currentUser = null;
         let isRegisterMode = false;
-        let unsubscribe = null; // To stop database listener
+        let unsubscribe = null;
 
-        // DOM Elements
         const loader = document.getElementById('loader');
         const loginScreen = document.getElementById('loginScreen');
         const appScreen = document.getElementById('appScreen');
         const container = document.getElementById('cardContainer');
 
-        // --- AUTHENTICATION LOGIC ---
-        
-        // Listen to login state
+        // --- AUTH LOGIC ---
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             if (user) {
-                // User is signed in
                 document.getElementById('userEmailDisplay').innerText = user.email;
                 loginScreen.style.display = 'none';
                 appScreen.style.display = 'block';
-                loadUserData(user.uid); // Load ONLY this user's data
+                // Note: Loader is NOT hidden here yet. It hides inside loadUserData
+                loadUserData(user.uid); 
             } else {
-                // User is signed out
                 loginScreen.style.display = 'flex';
                 appScreen.style.display = 'none';
                 container.innerHTML = '';
                 if(unsubscribe) unsubscribe();
+                loader.style.display = 'none'; // Only hide loader immediately if logged out
             }
-            loader.style.display = 'none';
         });
 
-        // Login / Register Form Submit
         document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            loader.style.display = 'flex'; // Show loader when clicking login
             const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
             const errorMsg = document.getElementById('authError');
-            
-            errorMsg.innerText = "Processing...";
+            errorMsg.innerText = "";
 
             try {
                 if (isRegisterMode) {
@@ -210,8 +209,8 @@
                 } else {
                     await signInWithEmailAndPassword(auth, email, pass);
                 }
-                errorMsg.innerText = "";
             } catch (error) {
+                loader.style.display = 'none'; // Hide loader if error
                 console.error(error);
                 let msg = "Something went wrong.";
                 if(error.code === 'auth/invalid-email') msg = "Email ပုံစံမမှန်ပါ";
@@ -223,7 +222,6 @@
             }
         });
 
-        // Toggle between Login & Register
         window.toggleAuthMode = () => {
             isRegisterMode = !isRegisterMode;
             document.getElementById('authTitle').innerText = isRegisterMode ? "အကောင့်သစ်ဖွင့်မည်" : "အကောင့်ဝင်ပါ";
@@ -238,26 +236,30 @@
             if(confirm("Logout လုပ်မှာလား?")) signOut(auth);
         }
 
-        // --- DATABASE LOGIC (Private Data) ---
-
+        // --- DATA LOGIC ---
         function loadUserData(uid) {
-            // QUERY: Select * from customers WHERE uid == current_user_uid
-            const q = query(
-                collection(db, "customers"), 
-                where("uid", "==", uid)
-                // orderBy removed to fix Index Error
-            );
+            const q = query(collection(db, "customers"), where("uid", "==", uid));
 
-            // Real-time Listener
             unsubscribe = onSnapshot(q, (snapshot) => {
                 container.innerHTML = '';
-                if (snapshot.empty) {
+                
+                // Convert snapshot to array to sort nicely
+                let docs = [];
+                snapshot.forEach((doc) => {
+                    docs.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Client-side Sort (Newest First) - No Index needed!
+                docs.sort((a, b) => b.createdAt - a.createdAt);
+
+                if (docs.length === 0) {
                     container.innerHTML = '<p style="text-align:center; color:#888; margin-top:50px;">မှတ်တမ်းမရှိသေးပါ</p>';
+                } else {
+                    docs.forEach(item => renderCard(item.id, item));
                 }
                 
-                snapshot.forEach((doc) => {
-                    renderCard(doc.id, doc.data());
-                });
+                // IMPORTANT: Hide loader ONLY after data is received
+                loader.style.display = 'none';
             });
         }
 
@@ -282,9 +284,6 @@
             container.appendChild(card);
         }
 
-        // --- CRUD OPERATIONS ---
-
-        // Add / Edit
         document.getElementById('dataForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             if(!currentUser) return;
@@ -295,7 +294,7 @@
             const link = document.getElementById('linkInput').value;
 
             const data = {
-                uid: currentUser.uid, // IMPORTANT: Tie data to user
+                uid: currentUser.uid,
                 name: name,
                 info: info,
                 link: link,
@@ -305,11 +304,9 @@
             try {
                 closeModal();
                 if(id) {
-                    // Update
                     const docRef = doc(db, "customers", id);
                     await updateDoc(docRef, { name, info, link });
                 } else {
-                    // Add New
                     await addDoc(collection(db, "customers"), data);
                 }
             } catch (err) {
@@ -318,7 +315,6 @@
             }
         });
 
-        // Expose functions to window for HTML onclick
         window.deleteData = async (id) => {
             if(confirm("ဖျက်မှာသေချာလား?")) {
                 await deleteDoc(doc(db, "customers", id));
@@ -344,7 +340,6 @@
         window.closeModal = () => {
             document.getElementById('modal').classList.remove('active');
         }
-
     </script>
 </body>
 </html>
