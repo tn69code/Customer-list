@@ -78,10 +78,10 @@
         /* FIXED LOGOUT ICON (Perfect Circle) */
         .logout-icon { 
             color: var(--danger); cursor: pointer; 
-            width: 40px; height: 40px; 
+            width: 40px; height: 40px; /* Fixed Size */
             border-radius: 50%; background: #FEF2F2;
-            display: flex; justify-content: center; align-items: center;
-            transition: 0.2s; flex-shrink: 0;
+            display: flex; justify-content: center; align-items: center; /* Center Icon */
+            transition: 0.2s; flex-shrink: 0; /* Prevent squashing */
         }
         .logout-icon:active { transform: scale(0.9); }
 
@@ -101,7 +101,6 @@
             color: #9CA3AF;
         }
 
-        /* Floating Add Button */
         .add-btn-float {
             position: fixed; bottom: 25px; right: 25px;
             background: var(--primary); color: white;
@@ -115,7 +114,6 @@
 
         .container { max-width: 600px; margin: 0 auto; display: grid; gap: 15px; }
         
-        /* Card Design */
         .card {
             background: white; border-radius: 16px; padding: 18px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid var(--primary);
@@ -131,7 +129,7 @@
         .card-actions { display: flex; justify-content: flex-end; gap: 15px; margin-top: 10px; }
         .action-btn { background: none; border: none; cursor: pointer; font-size: 0.9rem; }
 
-        /* Modals & Dialogs */
+        /* Modals */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.5);
             display: none; justify-content: center; align-items: center; z-index: 1000;
@@ -158,7 +156,6 @@
         .profile-edit-img img { width: 100%; height: 100%; object-fit: cover; }
         .profile-edit-icon { font-size: 1.5rem; color: #888; }
         
-        /* Loading */
         #loader { 
             position: fixed; inset: 0; background: white; z-index: 2000; 
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
@@ -279,41 +276,28 @@
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc, setDoc, getDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // --- SECURITY: OBFUSCATED CONFIG (Base64 Encoded) ---
-        // မိတ်ဆွေ၏ Key များကို ဝှက်ထားသော အပိုင်း
-        const _0x1 = (s) => atob(s);
-        const _config = {
-            _k: "QUl6YVN5Q3l6TjRud1NsOVJlRXd5bFMtLVB1d1diNDRsOVdJV1Aw",
-            _d: "Yy1saXN0LTZhMTM0LmZpcmViYXNlYXBwLmNvbQ==",
-            _p: "Yy1saXN0LTZhMTM0",
-            _s: "Yy1saXN0LTZhMTM0LmZpcmViYXNlc3RvcmFnZS5hcHA=",
-            _m: "NDU2Njg4MTA1MTAw",
-            _a: "MTo0NTY2ODgxMDUxMDA6d2ViOjg4Zjc4ZTBhYjJhYTNjYzM4ZTJkYTk="
-        };
-
+        // Config 
         const firebaseConfig = {
-            apiKey: _0x1(_config._k),
-            authDomain: _0x1(_config._d),
-            projectId: _0x1(_config._p),
-            storageBucket: _0x1(_config._s),
-            messagingSenderId: _0x1(_config._m),
-            appId: _0x1(_config._a)
+          apiKey: "AIzaSyCyzN4nwSl9ReEwylS--PhwWb44l9WIWP0",
+          authDomain: "c-list-6a134.firebaseapp.com",
+          projectId: "c-list-6a134",
+          storageBucket: "c-list-6a134.firebasestorage.app",
+          messagingSenderId: "456688105100",
+          appId: "1:456688105100:web:88f78e0ab2aa3cc38e2da9"
         };
-        // ----------------------------------------------------
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Enable Offline Persistence (Instant Load)
-        enableIndexedDbPersistence(db).catch((err) => console.log("Persistence:", err.code));
+        enableIndexedDbPersistence(db).catch((err) => console.log(err));
 
         let currentUser = null;
         let isRegisterMode = false;
         let unsubscribe = null;
         let pendingAction = null;
         let allCustomers = [];
-        let tempBase64Img = null;
+        let tempBase64Img = null; // To store image temporarily
 
         const loader = document.getElementById('loader');
         const loginScreen = document.getElementById('loginScreen');
@@ -322,21 +306,20 @@
         const confirmModal = document.getElementById('confirmModal');
         const profileModal = document.getElementById('profileModal');
 
-        // --- AUTH & INITIALIZATION ---
+        // --- AUTH LOGIC ---
         onAuthStateChanged(auth, async (user) => {
             currentUser = user;
             if (user) {
-                // Initial UI Setup
+                // Initialize Profile UI
                 document.getElementById('headerEmail').innerText = user.email;
                 document.getElementById('editProfileEmail').value = user.email;
+
+                // Load User Profile Data from Firestore (For Image)
+                await loadUserProfile(user);
                 
-                // Show App Immediately (Optimistic UI)
                 loader.style.display = 'none'; 
                 loginScreen.style.display = 'none';
                 appScreen.style.display = 'block';
-
-                // Load Data & Profile in background
-                loadUserProfile(user);
                 loadUserData(user.uid); 
             } else {
                 loginScreen.style.display = 'flex';
@@ -347,63 +330,74 @@
             }
         });
 
-        // --- PROFILE LOGIC ---
         async function loadUserProfile(user) {
-            try {
-                const userDocRef = doc(db, "user_profiles", user.uid);
-                const userSnap = await getDoc(userDocRef);
-                
-                let displayName = user.displayName || user.email.split('@')[0];
-                let photoData = null;
+            // Check Firestore for extended profile data (Image)
+            const userDocRef = doc(db, "user_profiles", user.uid);
+            const userSnap = await getDoc(userDocRef);
+            
+            let displayName = user.displayName || user.email.split('@')[0];
+            let photoData = null;
 
-                if (userSnap.exists()) {
-                    const data = userSnap.data();
-                    if(data.name) displayName = data.name;
-                    if(data.photoBase64) photoData = data.photoBase64;
-                }
+            if (userSnap.exists()) {
+                const data = userSnap.data();
+                if(data.name) displayName = data.name;
+                if(data.photoBase64) photoData = data.photoBase64;
+            }
 
-                document.getElementById('headerName').innerText = displayName;
-                const avatarEl = document.getElementById('headerAvatar');
-                
-                if (photoData) {
-                    avatarEl.innerHTML = `<img src="${photoData}">`;
-                    avatarEl.style.background = "none";
-                    avatarEl.style.border = "2px solid #fff";
-                } else {
-                    avatarEl.innerHTML = displayName.charAt(0).toUpperCase();
-                    avatarEl.style.background = "var(--primary)";
-                    avatarEl.style.border = "none";
-                }
-            } catch (e) { console.log("Profile Load Error", e); }
+            // Update UI
+            document.getElementById('headerName').innerText = displayName;
+            const avatarEl = document.getElementById('headerAvatar');
+            
+            if (photoData) {
+                avatarEl.innerHTML = `<img src="${photoData}">`;
+                avatarEl.style.background = "none";
+                avatarEl.style.border = "2px solid #fff";
+            } else {
+                avatarEl.innerHTML = displayName.charAt(0).toUpperCase();
+                avatarEl.style.background = "var(--primary)";
+            }
         }
 
+        // --- PROFILE EDIT LOGIC ---
         window.openProfileModal = () => {
             document.getElementById('editProfileName').value = document.getElementById('headerName').innerText;
+            // Reset image preview
             tempBase64Img = null;
             document.getElementById('previewImg').style.display = 'none';
             document.getElementById('previewIcon').style.display = 'block';
             profileModal.classList.add('active');
         }
 
-        window.closeProfileModal = () => { profileModal.classList.remove('active'); }
+        window.closeProfileModal = () => {
+            profileModal.classList.remove('active');
+        }
 
         window.handleImageSelect = (event) => {
             const file = event.target.files[0];
             if (file) {
-                if (file.size > 1024 * 1024) { alert("ပုံဆိုဒ် 1MB အောက် ရွေးပါ"); return; }
+                // Limit size (e.g., < 2MB is good, but for base64 string < 500KB is better)
+                if (file.size > 1024 * 1024) {
+                    alert("ပုံဆိုဒ်ကြီးလွန်းသည်။ 1MB အောက်ပုံ ရွေးပါ။");
+                    return;
+                }
+
                 const reader = new FileReader();
                 reader.onload = (e) => {
+                    // Compress image using Canvas
                     const img = new Image();
                     img.src = e.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        const maxWidth = 200; 
+                        const maxWidth = 200; // Resize to 200px width
                         const scaleSize = maxWidth / img.width;
                         canvas.width = maxWidth;
                         canvas.height = img.height * scaleSize;
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        tempBase64Img = canvas.toDataURL('image/jpeg', 0.7);
+                        
+                        tempBase64Img = canvas.toDataURL('image/jpeg', 0.7); // 70% quality
+                        
+                        // Show Preview
                         const preview = document.getElementById('previewImg');
                         preview.src = tempBase64Img;
                         preview.style.display = 'block';
@@ -419,23 +413,32 @@
             const newName = document.getElementById('editProfileName').value;
             if(!newName) return alert("နာမည်ထည့်ပါ");
 
+            // Update UI immediately (Optimistic)
             document.getElementById('headerName').innerText = newName;
             
             const updateData = { name: newName };
             if (tempBase64Img) {
                 updateData.photoBase64 = tempBase64Img;
+                // Update Avatar UI
                 const avatarEl = document.getElementById('headerAvatar');
                 avatarEl.innerHTML = `<img src="${tempBase64Img}">`;
             }
+
+            // Close Modal
             closeProfileModal();
 
             try {
+                // Save to Firestore "user_profiles" collection
                 await setDoc(doc(db, "user_profiles", currentUser.uid), updateData, { merge: true });
+                // Also update Auth Profile for standard practice
                 await updateProfile(currentUser, { displayName: newName });
-            } catch (error) { console.error(error); }
+            } catch (error) {
+                console.error("Profile Save Error:", error);
+                alert("သိမ်းမရပါ");
+            }
         }
 
-        // --- LOGIN/REGISTER ---
+        // --- LOGIN / REGISTER ---
         document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             loader.style.display = 'flex';
@@ -452,11 +455,9 @@
                 }
             } catch (error) {
                 loader.style.display = 'none';
-                let msg = "Error occurred.";
+                let msg = "Something went wrong.";
                 if(error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') msg = "Email သို့မဟုတ် Password မှားနေပါသည်";
                 if(error.code === 'auth/user-not-found') msg = "အကောင့်မရှိပါ";
-                if(error.code === 'auth/email-already-in-use') msg = "ဒီ Email ရှိပြီးသားပါ";
-                if(error.code === 'auth/weak-password') msg = "Password ၆ လုံးအထက် ပေးပါ";
                 errorMsg.innerText = msg;
             }
         });
@@ -470,7 +471,7 @@
                 : "အကောင့်မရှိဘူးလား? <span>Register လုပ်မည်</span>";
         }
 
-        // --- DIALOGS ---
+        // --- CONFIRMATION DIALOG ---
         window.confirmLogout = () => {
             document.getElementById('confirmMsg').innerText = "Logout လုပ်မှာသေချာလား?";
             pendingAction = () => signOut(auth);
@@ -479,7 +480,9 @@
 
         window.requestDelete = (id) => {
             document.getElementById('confirmMsg').innerText = "ဒီစာရင်းကို ဖျက်မှာသေချာလား?";
-            pendingAction = async () => { await deleteDoc(doc(db, "customers", id)); };
+            pendingAction = async () => {
+                await deleteDoc(doc(db, "customers", id));
+            };
             confirmModal.classList.add('active');
         }
 
@@ -488,11 +491,15 @@
             window.closeConfirm();
         });
 
-        window.closeConfirm = () => { confirmModal.classList.remove('active'); pendingAction = null; }
+        window.closeConfirm = () => {
+            confirmModal.classList.remove('active');
+            pendingAction = null;
+        }
 
-        // --- DATA LOGIC ---
+        // --- DATA & SEARCH LOGIC ---
         function loadUserData(uid) {
             const q = query(collection(db, "customers"), where("uid", "==", uid));
+
             unsubscribe = onSnapshot(q, (snapshot) => {
                 allCustomers = [];
                 snapshot.forEach((doc) => {
@@ -568,7 +575,10 @@
                 } else {
                     await addDoc(collection(db, "customers"), data);
                 }
-            } catch (err) { console.error("Error:", err); alert("Operation failed"); }
+            } catch (err) {
+                console.error("Error:", err);
+                alert("Operation failed");
+            }
         });
 
         window.prepEdit = (id, name, info, link) => {
@@ -587,7 +597,9 @@
             document.getElementById('modal').classList.add('active');
         }
 
-        window.closeModal = () => { document.getElementById('modal').classList.remove('active'); }
+        window.closeModal = () => {
+            document.getElementById('modal').classList.remove('active');
+        }
     </script>
 </body>
 </html>
