@@ -1,4 +1,4 @@
-const CACHE_NAME = "cnote-v3"; // Version upgraded to v3
+const CACHE_NAME = "cnote-v4";
 const ASSETS = [
   "./",
   "./index.html",
