@@ -144,20 +144,20 @@
         // Import Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // -----------------------------------------------------------
-        // မိတ်ဆွေ၏ Firebase Config (Update လုပ်ထားပြီး)
+        // မိတ်ဆွေ၏ Firebase Config (Updated)
         // -----------------------------------------------------------
- 
-const firebaseConfig = {
-  apiKey: "AIzaSyCyzN4nwSl9ReEwylS--PhwWb44l9WIWP0",
-  authDomain: "c-list-6a134.firebaseapp.com",
-  projectId: "c-list-6a134",
-  storageBucket: "c-list-6a134.firebasestorage.app",
-  messagingSenderId: "456688105100",
-  appId: "1:456688105100:web:88f78e0ab2aa3cc38e2da9"
-};
+        const firebaseConfig = {
+          apiKey: "AIzaSyCyzN4nwSl9ReEwylS--PhwWb44l9WIWP0",
+          authDomain: "c-list-6a134.firebaseapp.com",
+          projectId: "c-list-6a134",
+          storageBucket: "c-list-6a134.firebasestorage.app",
+          messagingSenderId: "456688105100",
+          appId: "1:456688105100:web:88f78e0ab2aa3cc38e2da9"
+        };
+
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -244,8 +244,8 @@ const firebaseConfig = {
             // QUERY: Select * from customers WHERE uid == current_user_uid
             const q = query(
                 collection(db, "customers"), 
-                where("uid", "==", uid),
-                orderBy("createdAt", "desc")
+                where("uid", "==", uid)
+                // orderBy removed to fix Index Error
             );
 
             // Real-time Listener
