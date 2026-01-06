@@ -13,6 +13,7 @@
             --primary: #4F46E5;
             --bg-color: #F3F4F6;
             --text-main: #1F2937;
+            --danger: #EF4444;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', 'Padauk', sans-serif; }
@@ -76,21 +77,36 @@
         .card-actions { display: flex; justify-content: flex-end; gap: 15px; margin-top: 10px; }
         .action-btn { background: none; border: none; cursor: pointer; font-size: 0.9rem; }
 
-        /* Modals & Loading */
+        /* Modals & Dialogs */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.5);
             display: none; justify-content: center; align-items: center; z-index: 1000;
         }
         .modal-overlay.active { display: flex; }
-        .modal-box { background: white; width: 90%; max-width: 350px; padding: 20px; border-radius: 20px; }
-        .modal-input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; }
-        .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-full { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; }
         
+        .modal-box { 
+            background: white; width: 90%; max-width: 350px; padding: 25px; border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transform: scale(0.95); transition: transform 0.2s;
+        }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+
+        .modal-input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; }
+        .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-full { flex: 1; padding: 10px; border: none; border-radius: 10px; cursor: pointer; font-weight:600; }
+        
+        /* Full Screen Loader */
         #loader { 
             position: fixed; inset: 0; background: white; z-index: 2000; 
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
         }
+
+        /* Skeleton Loading (Small placeholder while loading) */
+        .skeleton-card {
+            background: #e5e7eb; height: 100px; border-radius: 16px; 
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
     </style>
 </head>
@@ -98,7 +114,6 @@
 
     <div id="loader">
         <i class="fa-solid fa-circle-notch fa-spin fa-2x" style="color:var(--primary)"></i>
-        <p style="margin-top:10px; font-size:0.9rem; color:#666;">စာရင်းများကို ဆွဲယူနေပါသည်...</p>
     </div>
 
     <div id="loginScreen">
@@ -122,7 +137,7 @@
                 <h1 style="font-size:1.2rem; color:var(--primary);">Customer စာရင်း</h1>
                 <div class="user-info">
                     <span id="userEmailDisplay"></span>
-                    <i class="fa-solid fa-right-from-bracket logout-btn" onclick="handleLogout()"></i>
+                    <i class="fa-solid fa-right-from-bracket logout-btn" onclick="confirmLogout()"></i>
                 </div>
             </div>
             <button class="add-btn" onclick="openModal()">
@@ -130,7 +145,10 @@
             </button>
         </header>
 
-        <div class="container" id="cardContainer"></div>
+        <div class="container" id="cardContainer">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+        </div>
     </div>
 
     <div class="modal-overlay" id="modal">
@@ -142,17 +160,30 @@
                 <textarea id="infoInput" class="modal-input" rows="3" placeholder="အချက်အလက်" required></textarea>
                 <input type="url" id="linkInput" class="modal-input" placeholder="Link (Optional)">
                 <div class="modal-btns">
-                    <button type="button" class="btn-full" style="background:#eee;" onclick="closeModal()">မလုပ်ပါ</button>
+                    <button type="button" class="btn-full" style="background:#F3F4F6; color:#333;" onclick="closeModal()">မလုပ်ပါ</button>
                     <button type="submit" class="btn-full" style="background:var(--primary); color:white;">သိမ်းမည်</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-box" style="text-align: center;">
+            <div style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;">
+                <i class="fa-solid fa-circle-question"></i>
+            </div>
+            <h3 id="confirmMsg" style="margin-bottom: 20px; color: var(--text-main);">သေချာပြီလား?</h3>
+            <div class="modal-btns">
+                <button class="btn-full" style="background:#F3F4F6; color:#333;" onclick="closeConfirm()">မလုပ်ပါ</button>
+                <button id="confirmYesBtn" class="btn-full" style="background:var(--primary); color:white;">သေချာသည်</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // Config 
         const firebaseConfig = {
@@ -168,36 +199,52 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // --- SPEED BOOST: ENABLE OFFLINE PERSISTENCE ---
+        // This makes data load instantly from phone cache
+        enableIndexedDbPersistence(db).catch((err) => {
+            if (err.code == 'failed-precondition') {
+                console.log('Multiple tabs open, persistence can only be enabled in one tab at a a time.');
+            } else if (err.code == 'unimplemented') {
+                console.log('The current browser does not support all of the features required to enable persistence');
+            }
+        });
+
         let currentUser = null;
         let isRegisterMode = false;
         let unsubscribe = null;
+        let pendingAction = null;
 
         const loader = document.getElementById('loader');
         const loginScreen = document.getElementById('loginScreen');
         const appScreen = document.getElementById('appScreen');
         const container = document.getElementById('cardContainer');
+        const confirmModal = document.getElementById('confirmModal');
 
         // --- AUTH LOGIC ---
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             if (user) {
                 document.getElementById('userEmailDisplay').innerText = user.email;
+                
+                // SPEED OPTIMIZATION:
+                // Show App Screen IMMEDIATELY, don't wait for data
+                loader.style.display = 'none'; 
                 loginScreen.style.display = 'none';
                 appScreen.style.display = 'block';
-                // Note: Loader is NOT hidden here yet. It hides inside loadUserData
+                
                 loadUserData(user.uid); 
             } else {
                 loginScreen.style.display = 'flex';
                 appScreen.style.display = 'none';
                 container.innerHTML = '';
                 if(unsubscribe) unsubscribe();
-                loader.style.display = 'none'; // Only hide loader immediately if logged out
+                loader.style.display = 'none';
             }
         });
 
         document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            loader.style.display = 'flex'; // Show loader when clicking login
+            loader.style.display = 'flex';
             const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
             const errorMsg = document.getElementById('authError');
@@ -209,15 +256,12 @@
                 } else {
                     await signInWithEmailAndPassword(auth, email, pass);
                 }
+                // Loader will be hidden by onAuthStateChanged
             } catch (error) {
-                loader.style.display = 'none'; // Hide loader if error
-                console.error(error);
+                loader.style.display = 'none';
                 let msg = "Something went wrong.";
-                if(error.code === 'auth/invalid-email') msg = "Email ပုံစံမမှန်ပါ";
                 if(error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') msg = "Email သို့မဟုတ် Password မှားနေပါသည်";
                 if(error.code === 'auth/user-not-found') msg = "အကောင့်မရှိပါ";
-                if(error.code === 'auth/email-already-in-use') msg = "ဒီ Email နဲ့ အကောင့်ရှိပြီးသားပါ";
-                if(error.code === 'auth/weak-password') msg = "Password အနည်းဆုံး ၆ လုံး ထားပေးပါ";
                 errorMsg.innerText = msg;
             }
         });
@@ -229,37 +273,54 @@
             document.getElementById('toggleMsg').innerHTML = isRegisterMode 
                 ? "အကောင့်ရှိပြီးလား? <span>Login ဝင်မည်</span>" 
                 : "အကောင့်မရှိဘူးလား? <span>Register လုပ်မည်</span>";
-            document.getElementById('authError').innerText = "";
         }
 
-        window.handleLogout = () => {
-            if(confirm("Logout လုပ်မှာလား?")) signOut(auth);
+        // --- CONFIRMATION DIALOG LOGIC ---
+        window.confirmLogout = () => {
+            document.getElementById('confirmMsg').innerText = "Logout လုပ်မှာသေချာလား?";
+            pendingAction = () => signOut(auth);
+            confirmModal.classList.add('active');
+        }
+
+        window.requestDelete = (id) => {
+            document.getElementById('confirmMsg').innerText = "ဒီစာရင်းကို ဖျက်မှာသေချာလား?";
+            pendingAction = async () => {
+                await deleteDoc(doc(db, "customers", id));
+            };
+            confirmModal.classList.add('active');
+        }
+
+        document.getElementById('confirmYesBtn').addEventListener('click', () => {
+            if (pendingAction) pendingAction();
+            window.closeConfirm();
+        });
+
+        window.closeConfirm = () => {
+            confirmModal.classList.remove('active');
+            pendingAction = null;
         }
 
         // --- DATA LOGIC ---
         function loadUserData(uid) {
             const q = query(collection(db, "customers"), where("uid", "==", uid));
 
+            // onSnapshot triggers instantly with cached data first (if enabled)
             unsubscribe = onSnapshot(q, (snapshot) => {
-                container.innerHTML = '';
                 
-                // Convert snapshot to array to sort nicely
                 let docs = [];
                 snapshot.forEach((doc) => {
                     docs.push({ id: doc.id, ...doc.data() });
                 });
 
-                // Client-side Sort (Newest First) - No Index needed!
+                // Client-side Sort
                 docs.sort((a, b) => b.createdAt - a.createdAt);
 
+                container.innerHTML = '';
                 if (docs.length === 0) {
                     container.innerHTML = '<p style="text-align:center; color:#888; margin-top:50px;">မှတ်တမ်းမရှိသေးပါ</p>';
                 } else {
                     docs.forEach(item => renderCard(item.id, item));
                 }
-                
-                // IMPORTANT: Hide loader ONLY after data is received
-                loader.style.display = 'none';
             });
         }
 
@@ -276,7 +337,7 @@
                     <button class="action-btn" style="color:var(--primary)" onclick="prepEdit('${id}', '${data.name}', \`${data.info}\`, '${data.link || ''}')">
                         <i class="fa-solid fa-pen"></i> ပြင်
                     </button>
-                    <button class="action-btn" style="color:#EF4444" onclick="deleteData('${id}')">
+                    <button class="action-btn" style="color:#EF4444" onclick="requestDelete('${id}')">
                         <i class="fa-solid fa-trash"></i> ဖျက်
                     </button>
                 </div>
@@ -314,12 +375,6 @@
                 alert("Operation failed");
             }
         });
-
-        window.deleteData = async (id) => {
-            if(confirm("ဖျက်မှာသေချာလား?")) {
-                await deleteDoc(doc(db, "customers", id));
-            }
-        }
 
         window.prepEdit = (id, name, info, link) => {
             document.getElementById('docId').value = id;
