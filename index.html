@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Customer App</title>
+    <title>CNote</title>
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4F46E5">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
     <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#4F46E5">
-<link rel="apple-touch-icon" href="icon-192.png">
 
     <style>
         :root {
@@ -116,22 +117,37 @@
         .card {
             background: white; border-radius: 16px; padding: 18px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid var(--primary);
-            position: relative; animation: fadeIn 0.3s ease-in;
+            position: relative; animation: fadeIn 0.3s ease-in; transition: 0.3s;
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* PINNED STYLE */
+        .card.pinned {
+            border-left: 4px solid #F59E0B; /* Amber Color */
+            background: #FFFBEB;
+        }
+        .pin-icon {
+            font-size: 1.2rem; cursor: pointer; color: #D1D5DB; transition: 0.2s;
+        }
+        .pin-icon.active {
+            color: #F59E0B; transform: rotate(45deg);
+        }
+
+        /* DATE STYLE */
+        .card-date {
+            font-size: 0.75rem; color: #9CA3AF; margin-top: 8px; 
+            display: flex; align-items: center; gap: 5px; font-weight: 500;
+        }
 
         .card-name { font-weight: 700; font-size: 1.1rem; margin-bottom: 8px; }
         .card-info { 
             background: #F9FAFB; padding: 10px; border-radius: 8px; 
             font-size: 0.9rem; margin-bottom: 10px; white-space: pre-wrap; 
-            word-wrap: break-word; 
-            font-family: monospace; /* Monospace for code look */
-            color: #4b5563;
+            word-wrap: break-word; font-family: monospace; color: #4b5563;
         }
         .card-actions { display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin-top: 10px; }
         .action-btn { background: none; border: none; cursor: pointer; font-size: 0.9rem; }
         
-        /* See More Button Style */
         .see-more-btn {
             color: white; background: var(--primary); 
             padding: 4px 10px; border-radius: 6px; 
@@ -149,7 +165,7 @@
             background: white; width: 90%; max-width: 350px; padding: 25px; border-radius: 20px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             transform: scale(0.95); transition: transform 0.2s;
-            max-height: 80vh; display: flex; flex-direction: column; /* For scrolling content */
+            max-height: 80vh; display: flex; flex-direction: column;
         }
         .modal-overlay.active .modal-box { transform: scale(1); }
 
@@ -157,7 +173,6 @@
         .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
         .btn-full { flex: 1; padding: 10px; border: none; border-radius: 10px; cursor: pointer; font-weight:600; }
         
-        /* VIEW CODE MODAL SPECIFIC */
         .view-content-box {
             background: #1F2937; color: #E5E7EB;
             padding: 15px; border-radius: 10px;
@@ -182,6 +197,16 @@
         }
         .empty-msg { text-align:center; color:#9CA3AF; margin-top:40px; }
 
+        /* TOAST NOTIFICATION */
+        #toast-box {
+            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+            background: #333; color: white; padding: 12px 20px; border-radius: 30px;
+            font-size: 0.9rem; z-index: 3000; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            white-space: nowrap;
+        }
+        #toast-box.show { display: block; animation: fadeUp 0.3s forwards; }
+        @keyframes fadeUp { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
     </style>
 </head>
 <body>
@@ -189,6 +214,8 @@
     <div id="loader">
         <i class="fa-solid fa-circle-notch fa-spin fa-2x" style="color:var(--primary)"></i>
     </div>
+
+    <div id="toast-box">Notification</div>
 
     <div id="loginScreen">
         <div class="auth-box">
@@ -254,7 +281,6 @@
         <div class="modal-box">
             <h3 style="margin-bottom:15px; text-align:center;">အချက်အလက်များ</h3>
             <div id="viewContent" class="view-content-box"></div>
-            
             <div class="modal-btns">
                 <button class="btn-full" style="background:#F3F4F6; color:#333;" onclick="closeViewModal()">Close</button>
                 <button class="btn-full" style="background:var(--primary); color:white;" onclick="copyViewContent()">
@@ -272,7 +298,6 @@
                 <div id="previewIcon" class="profile-edit-icon"><i class="fa-solid fa-camera"></i></div>
             </div>
             <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleImageSelect(event)">
-            
             <div style="margin-bottom:10px;">
                 <label style="font-size:0.8rem; font-weight:600; color:#666;">အမည်</label>
                 <input type="text" id="editProfileName" class="modal-input" placeholder="Name">
@@ -328,7 +353,7 @@
         let pendingAction = null;
         let allCustomers = [];
         let tempBase64Img = null;
-        let currentViewId = null; // To store ID for viewing
+        let currentViewId = null;
 
         const loader = document.getElementById('loader');
         const loginScreen = document.getElementById('loginScreen');
@@ -337,6 +362,14 @@
         const confirmModal = document.getElementById('confirmModal');
         const profileModal = document.getElementById('profileModal');
         const viewModal = document.getElementById('viewModal');
+        const toastBox = document.getElementById('toast-box');
+
+        // --- TOAST FUNCTION ---
+        window.showToast = (msg) => {
+            toastBox.innerText = msg;
+            toastBox.classList.add('show');
+            setTimeout(() => toastBox.classList.remove('show'), 3000);
+        }
 
         // --- AUTH LOGIC ---
         onAuthStateChanged(auth, async (user) => {
@@ -397,7 +430,7 @@
         window.handleImageSelect = (event) => {
             const file = event.target.files[0];
             if (file) {
-                if (file.size > 1024 * 1024) { alert("ပုံဆိုဒ်ကြီးလွန်းသည်။ 1MB အောက်ပုံ ရွေးပါ။"); return; }
+                if (file.size > 1024 * 1024) { showToast("1MB အောက်ပုံ ရွေးပါ"); return; }
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
@@ -424,7 +457,7 @@
         window.saveProfile = async () => {
             if(!currentUser) return;
             const newName = document.getElementById('editProfileName').value;
-            if(!newName) return alert("နာမည်ထည့်ပါ");
+            if(!newName) return showToast("နာမည်ထည့်ပါ");
             document.getElementById('headerName').innerText = newName;
             
             const updateData = { name: newName };
@@ -436,10 +469,11 @@
             try {
                 await setDoc(doc(db, "user_profiles", currentUser.uid), updateData, { merge: true });
                 await updateProfile(currentUser, { displayName: newName });
-            } catch (error) { console.error("Profile Save Error:", error); alert("သိမ်းမရပါ"); }
+                showToast("Profile ပြင်ပြီးပါပြီ");
+            } catch (error) { console.error("Profile Save Error:", error); showToast("သိမ်းမရပါ"); }
         }
 
-        // --- AUTH ---
+        // --- AUTH FORM ---
         document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             loader.style.display = 'flex';
@@ -471,7 +505,6 @@
                 : "အကောင့်မရှိဘူးလား? <span>Register လုပ်မည်</span>";
         }
 
-        // --- DIALOGS ---
         window.confirmLogout = () => {
             document.getElementById('confirmMsg').innerText = "Logout လုပ်မှာသေချာလား?";
             pendingAction = () => signOut(auth);
@@ -480,7 +513,10 @@
 
         window.requestDelete = (id) => {
             document.getElementById('confirmMsg').innerText = "ဒီစာရင်းကို ဖျက်မှာသေချာလား?";
-            pendingAction = async () => { await deleteDoc(doc(db, "customers", id)); };
+            pendingAction = async () => { 
+                await deleteDoc(doc(db, "customers", id)); 
+                showToast("ဖျက်လိုက်ပါပြီ");
+            };
             confirmModal.classList.add('active');
         }
 
@@ -491,7 +527,7 @@
 
         window.closeConfirm = () => { confirmModal.classList.remove('active'); pendingAction = null; }
 
-        // --- DATA & RENDER ---
+        // --- DATA LOAD & SORTING ---
         function loadUserData(uid) {
             const q = query(collection(db, "customers"), where("uid", "==", uid));
             unsubscribe = onSnapshot(q, (snapshot) => {
@@ -499,7 +535,15 @@
                 snapshot.forEach((doc) => {
                     allCustomers.push({ id: doc.id, ...doc.data() });
                 });
-                allCustomers.sort((a, b) => b.createdAt - a.createdAt);
+                
+                // SORTING: Pinned items first, then Date
+                allCustomers.sort((a, b) => {
+                    const pinA = a.isPinned ? 1 : 0;
+                    const pinB = b.isPinned ? 1 : 0;
+                    if (pinA !== pinB) return pinB - pinA; // Pin desc
+                    return b.createdAt - a.createdAt; // Date desc
+                });
+
                 renderList(allCustomers);
             });
         }
@@ -513,6 +557,23 @@
             renderList(filtered);
         }
 
+        // --- TOGGLE PIN ---
+        window.togglePin = async (id, currentStatus) => {
+            if (!currentStatus) {
+                // Check Limit if trying to pin
+                const pinnedCount = allCustomers.filter(c => c.isPinned).length;
+                if (pinnedCount >= 3) {
+                    showToast("Pin ၃ ခုသာ လုပ်ခွင့်ရှိသည်!");
+                    return;
+                }
+            }
+            const docRef = doc(db, "customers", id);
+            try {
+                await updateDoc(docRef, { isPinned: !currentStatus });
+                showToast(currentStatus ? "Pin ဖြုတ်လိုက်သည်" : "Pin လုပ်လိုက်သည်");
+            } catch(err) { console.error(err); }
+        }
+
         function renderList(dataList) {
             container.innerHTML = '';
             if (dataList.length === 0) {
@@ -524,13 +585,18 @@
 
         function renderCard(id, data) {
             const card = document.createElement('div');
-            card.className = 'card';
+            const isPinned = data.isPinned === true;
+            card.className = `card ${isPinned ? 'pinned' : ''}`;
+            
             const linkHtml = data.link ? `<a href="${data.link}" target="_blank" style="color:var(--primary); font-size:0.9rem; text-decoration:none;"><i class="fa-solid fa-link"></i> Link</a>` : '';
             
-            // --- NEW: SEE MORE DIALOG LOGIC ---
+            // Format Date
+            const dateObj = new Date(data.createdAt);
+            const dateStr = dateObj.toLocaleDateString('en-GB') + " " + dateObj.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
+
+            // Truncate Info
             const limit = 80;
             let infoHtml = '';
-            // Safe HTML escape
             const safeInfo = data.info.replace(/</g, "&lt;").replace(/>/g, "&gt;"); 
 
             if (data.info.length > limit) {
@@ -541,9 +607,17 @@
             }
 
             card.innerHTML = `
-                <div class="card-name">${data.name}</div>
+                <div style="display:flex; justify-content:space-between; align-items:start;">
+                    <div class="card-name">${data.name}</div>
+                    <i class="fa-solid fa-thumbtack pin-icon ${isPinned ? 'active' : ''}" onclick="togglePin('${id}', ${isPinned})"></i>
+                </div>
                 <div class="card-info">${infoHtml}</div>
-                ${linkHtml}
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+                    <div class="card-date"><i class="fa-regular fa-clock"></i> ${dateStr}</div>
+                    ${linkHtml}
+                </div>
+
                 <div class="card-actions">
                     <button class="action-btn" style="color:var(--primary)" onclick="prepEdit('${id}')">
                         <i class="fa-solid fa-pen"></i> ပြင်
@@ -556,32 +630,28 @@
             container.appendChild(card);
         }
 
-        // --- NEW: VIEW MODAL FUNCTIONS ---
+        // --- VIEW MODAL ---
         window.openViewModal = (id) => {
             currentViewId = id;
             const item = allCustomers.find(c => c.id === id);
             if(item) {
-                document.getElementById('viewContent').innerText = item.info; // Use innerText to keep formatting safe
+                document.getElementById('viewContent').innerText = item.info;
                 viewModal.classList.add('active');
             }
         }
-
-        window.closeViewModal = () => {
-            viewModal.classList.remove('active');
-            currentViewId = null;
-        }
+        window.closeViewModal = () => { viewModal.classList.remove('active'); currentViewId = null; }
 
         window.copyViewContent = () => {
             if(!currentViewId) return;
             const item = allCustomers.find(c => c.id === currentViewId);
             if(item) {
                 navigator.clipboard.writeText(item.info).then(() => {
-                    alert("Copied all content!");
+                    showToast("စာသားများ ကူးယူပြီးပါပြီ");
                 }).catch(err => console.error("Copy failed", err));
             }
         }
 
-        // --- EDIT & ADD ---
+        // --- ADD & EDIT ---
         document.getElementById('dataForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             if(!currentUser) return;
@@ -595,18 +665,22 @@
                 name: name,
                 info: info,
                 link: link,
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                isPinned: false // Default
             };
 
             try {
                 closeModal();
                 if(id) {
                     const docRef = doc(db, "customers", id);
+                    // Update only specific fields (preserve isPinned)
                     await updateDoc(docRef, { name, info, link });
+                    showToast("ပြင်ဆင်ပြီးပါပြီ");
                 } else {
                     await addDoc(collection(db, "customers"), data);
+                    showToast("ထည့်သွင်းပြီးပါပြီ");
                 }
-            } catch (err) { console.error("Error:", err); alert("Operation failed"); }
+            } catch (err) { console.error("Error:", err); showToast("Something wrong"); }
         });
 
         window.prepEdit = (id) => {
@@ -632,14 +706,14 @@
     </script>
 
     <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('Service Worker Registered!', reg.scope))
-                .catch(err => console.log('Service Worker Failed:', err));
-        });
-    }
-</script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker Registered!', reg.scope))
+                    .catch(err => console.log('Service Worker Failed:', err));
+            });
+        }
+    </script>
 
 </body>
 </html>
