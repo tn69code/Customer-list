@@ -1,4 +1,4 @@
-const CACHE_NAME = "cnote-v2";
+const CACHE_NAME = "cnote-v3"; // Version upgraded to v3
 const ASSETS = [
   "./",
   "./index.html",
@@ -11,7 +11,6 @@ const ASSETS = [
 
 // 1. Install Service Worker
 self.addEventListener("install", (e) => {
-  // Update ချက်ချင်းဖြစ်စေရန် skipWaiting ထည့်ထားသည်
   self.skipWaiting(); 
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -20,7 +19,7 @@ self.addEventListener("install", (e) => {
   );
 });
 
-// 2. Activate & Delete Old Caches (Version အဟောင်းဖျက်မည့်အပိုင်း)
+// 2. Activate & Delete Old Caches
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys().then((keyList) => {
