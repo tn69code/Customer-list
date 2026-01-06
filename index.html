@@ -46,7 +46,7 @@
         /* --- APP SCREEN --- */
         #appScreen { display: none; padding: 20px; padding-bottom: 80px; }
         
-        /* Modern Header */
+        /* Header */
         header {
             max-width: 600px; margin: 0 auto 20px; 
             background: white; padding: 15px 20px; border-radius: 20px;
@@ -121,15 +121,20 @@
         .card-info { 
             background: #F9FAFB; padding: 10px; border-radius: 8px; 
             font-size: 0.9rem; margin-bottom: 10px; white-space: pre-wrap; 
-            word-wrap: break-word; /* Ensure long code wraps */
+            word-wrap: break-word; 
+            font-family: monospace; /* Monospace for code look */
+            color: #4b5563;
         }
         .card-actions { display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin-top: 10px; }
         .action-btn { background: none; border: none; cursor: pointer; font-size: 0.9rem; }
         
-        /* See More & Copy Styles */
-        .see-more { color: var(--primary); cursor: pointer; font-weight: 600; font-size: 0.85rem; margin-left: 5px; }
-        .copy-btn { color: #6B7280; margin-right: auto; /* Pushes other buttons to right */ display: flex; align-items: center; gap: 5px; font-size: 0.85rem;}
-        .copy-btn:active { color: var(--primary); }
+        /* See More Button Style */
+        .see-more-btn {
+            color: white; background: var(--primary); 
+            padding: 4px 10px; border-radius: 6px; 
+            font-size: 0.75rem; cursor: pointer; border: none;
+            display: inline-block; margin-top: 5px;
+        }
 
         /* Modals */
         .modal-overlay {
@@ -141,6 +146,7 @@
             background: white; width: 90%; max-width: 350px; padding: 25px; border-radius: 20px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             transform: scale(0.95); transition: transform 0.2s;
+            max-height: 80vh; display: flex; flex-direction: column; /* For scrolling content */
         }
         .modal-overlay.active .modal-box { transform: scale(1); }
 
@@ -148,6 +154,17 @@
         .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
         .btn-full { flex: 1; padding: 10px; border: none; border-radius: 10px; cursor: pointer; font-weight:600; }
         
+        /* VIEW CODE MODAL SPECIFIC */
+        .view-content-box {
+            background: #1F2937; color: #E5E7EB;
+            padding: 15px; border-radius: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap; word-break: break-all;
+            overflow-y: auto; max-height: 300px;
+            margin-bottom: 10px; border: 1px solid #374151;
+        }
+
         .profile-edit-img {
             width: 80px; height: 80px; border-radius: 50%; background: #eee;
             margin: 0 auto 15px; display: flex; justify-content: center; align-items: center;
@@ -230,6 +247,20 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal-box">
+            <h3 style="margin-bottom:15px; text-align:center;">အချက်အလက်များ</h3>
+            <div id="viewContent" class="view-content-box"></div>
+            
+            <div class="modal-btns">
+                <button class="btn-full" style="background:#F3F4F6; color:#333;" onclick="closeViewModal()">Close</button>
+                <button class="btn-full" style="background:var(--primary); color:white;" onclick="copyViewContent()">
+                    <i class="fa-regular fa-copy"></i> Copy All
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="profileModal">
         <div class="modal-box">
             <h3 style="margin-bottom:15px; text-align:center;">Profile ပြင်မည်</h3>
@@ -294,6 +325,7 @@
         let pendingAction = null;
         let allCustomers = [];
         let tempBase64Img = null;
+        let currentViewId = null; // To store ID for viewing
 
         const loader = document.getElementById('loader');
         const loginScreen = document.getElementById('loginScreen');
@@ -301,6 +333,7 @@
         const container = document.getElementById('cardContainer');
         const confirmModal = document.getElementById('confirmModal');
         const profileModal = document.getElementById('profileModal');
+        const viewModal = document.getElementById('viewModal');
 
         // --- AUTH LOGIC ---
         onAuthStateChanged(auth, async (user) => {
@@ -356,7 +389,6 @@
             document.getElementById('previewIcon').style.display = 'block';
             profileModal.classList.add('active');
         }
-
         window.closeProfileModal = () => { profileModal.classList.remove('active'); }
 
         window.handleImageSelect = (event) => {
@@ -436,6 +468,7 @@
                 : "အကောင့်မရှိဘူးလား? <span>Register လုပ်မည်</span>";
         }
 
+        // --- DIALOGS ---
         window.confirmLogout = () => {
             document.getElementById('confirmMsg').innerText = "Logout လုပ်မှာသေချာလား?";
             pendingAction = () => signOut(auth);
@@ -491,18 +524,15 @@
             card.className = 'card';
             const linkHtml = data.link ? `<a href="${data.link}" target="_blank" style="color:var(--primary); font-size:0.9rem; text-decoration:none;"><i class="fa-solid fa-link"></i> Link</a>` : '';
             
-            // --- SEE MORE LOGIC ---
-            const limit = 100;
+            // --- NEW: SEE MORE DIALOG LOGIC ---
+            const limit = 80;
             let infoHtml = '';
-            // Escape special chars to avoid breaking JS/HTML in simple strings
+            // Safe HTML escape
             const safeInfo = data.info.replace(/</g, "&lt;").replace(/>/g, "&gt;"); 
 
             if (data.info.length > limit) {
                 const shortText = safeInfo.substring(0, limit) + "...";
-                infoHtml = `
-                    <span id="short-${id}">${shortText} <span class="see-more" onclick="toggleSeeMore('${id}')">See more</span></span>
-                    <span id="full-${id}" style="display:none;">${safeInfo} <span class="see-more" onclick="toggleSeeMore('${id}')">See less</span></span>
-                `;
+                infoHtml = `${shortText} <button class="see-more-btn" onclick="openViewModal('${id}')">See more</button>`;
             } else {
                 infoHtml = safeInfo;
             }
@@ -512,10 +542,6 @@
                 <div class="card-info">${infoHtml}</div>
                 ${linkHtml}
                 <div class="card-actions">
-                    <button class="action-btn copy-btn" onclick="copyCardContent('${id}')">
-                        <i class="fa-regular fa-copy"></i> Copy
-                    </button>
-
                     <button class="action-btn" style="color:var(--primary)" onclick="prepEdit('${id}')">
                         <i class="fa-solid fa-pen"></i> ပြင်
                     </button>
@@ -527,28 +553,28 @@
             container.appendChild(card);
         }
 
-        // --- NEW FEATURES: SEE MORE & COPY ---
-        window.toggleSeeMore = (id) => {
-            const shortSpan = document.getElementById(`short-${id}`);
-            const fullSpan = document.getElementById(`full-${id}`);
-            if (shortSpan.style.display === 'none') {
-                shortSpan.style.display = 'inline';
-                fullSpan.style.display = 'none';
-            } else {
-                shortSpan.style.display = 'none';
-                fullSpan.style.display = 'inline';
+        // --- NEW: VIEW MODAL FUNCTIONS ---
+        window.openViewModal = (id) => {
+            currentViewId = id;
+            const item = allCustomers.find(c => c.id === id);
+            if(item) {
+                document.getElementById('viewContent').innerText = item.info; // Use innerText to keep formatting safe
+                viewModal.classList.add('active');
             }
         }
 
-        window.copyCardContent = (id) => {
-            // Find data in array to copy clean text (avoiding HTML entities issues)
-            const item = allCustomers.find(c => c.id === id);
+        window.closeViewModal = () => {
+            viewModal.classList.remove('active');
+            currentViewId = null;
+        }
+
+        window.copyViewContent = () => {
+            if(!currentViewId) return;
+            const item = allCustomers.find(c => c.id === currentViewId);
             if(item) {
                 navigator.clipboard.writeText(item.info).then(() => {
-                    alert("Copied!");
-                }).catch(err => {
-                    console.error('Copy failed', err);
-                });
+                    alert("Copied all content!");
+                }).catch(err => console.error("Copy failed", err));
             }
         }
 
@@ -581,7 +607,6 @@
         });
 
         window.prepEdit = (id) => {
-            // Fetch clean data from array instead of passing via HTML
             const item = allCustomers.find(c => c.id === id);
             if(item) {
                 document.getElementById('docId').value = id;
