@@ -3,6 +3,9 @@ const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
+  "./icon-192.png", // ဒီနှစ်ကြောင်း
+  "./icon-512.png", // ထပ်ဖြည့်ပါ
+  
   "https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&family=Poppins:wght@400;500;600&display=swap",
   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 ];
