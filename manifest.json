@@ -1,5 +1,5 @@
 {
-  "name": "CNote App",
+  "name": "CNote",
   "short_name": "CNote",
   "start_url": "./index.html",
   "display": "standalone",
