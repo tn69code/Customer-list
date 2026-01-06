@@ -1,4 +1,4 @@
-const CACHE_NAME = "cnote-app-v3";
+const CACHE_NAME = "cnote-v1";
 const ASSETS = [
   "./",
   "./index.html",
