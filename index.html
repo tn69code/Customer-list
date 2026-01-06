@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CNote</title>
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://www.gstatic.com"> 
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4F46E5">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -24,6 +29,9 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', 'Padauk', sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; }
+
+        /* Font Optimization */
+        body, button, input, textarea { font-display: swap; }
 
         /* --- LOGIN SCREEN --- */
         #loginScreen {
@@ -48,11 +56,17 @@
         .toggle-text span { color: var(--primary); font-weight: 600; }
 
         /* --- APP SCREEN --- */
-        #appScreen { display: none; padding: 20px; padding-bottom: 80px; }
+        #appScreen { display: none; padding-top: 20px; padding-bottom: 100px; }
         
+        /* RESPONSIVE LAYOUT FIX */
+        header, .container {
+            width: 92%; 
+            max-width: 600px; 
+            margin: 0 auto 15px;
+        }
+
         /* Header */
         header {
-            max-width: 600px; margin: 0 auto 20px; 
             background: white; padding: 15px 20px; border-radius: 20px;
             box-shadow: 0 2px 15px rgba(0,0,0,0.05);
         }
@@ -63,7 +77,7 @@
 
         .profile-area {
             display: flex; align-items: center; gap: 12px; cursor: pointer;
-            padding: 5px; border-radius: 10px; transition: 0.2s;
+            padding: 5px; border-radius: 10px; transition: 0.2s; width: 100%;
         }
         .profile-area:active { background: #f9fafb; }
 
@@ -71,23 +85,15 @@
             width: 45px; height: 45px; background: var(--primary); color: white;
             border-radius: 50%; display: flex; justify-content: center; align-items: center;
             font-weight: 700; font-size: 1.2rem; text-transform: uppercase;
-            overflow: hidden; border: 2px solid #EEF2FF; object-fit: cover;
+            overflow: hidden; border: 2px solid #EEF2FF; object-fit: cover; flex-shrink: 0;
         }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
 
         .profile-info h2 { font-size: 1rem; font-weight: 600; line-height: 1.2; color: var(--text-main); }
         .profile-info p { font-size: 0.8rem; color: var(--text-sub); }
 
-        .logout-icon { 
-            color: var(--danger); cursor: pointer; 
-            width: 40px; height: 40px; border-radius: 50%; background: #FEF2F2;
-            display: flex; justify-content: center; align-items: center;
-            transition: 0.2s; flex-shrink: 0;
-        }
-        .logout-icon:active { transform: scale(0.9); }
-
         /* Search Bar */
-        .search-container { position: relative; margin-bottom: 5px; }
+        .search-container { position: relative; }
         .search-input {
             width: 100%; padding: 12px 15px 12px 40px;
             border: 2px solid #E5E7EB; border-radius: 12px;
@@ -100,18 +106,30 @@
             color: #9CA3AF;
         }
 
-        .add-btn-float {
-            position: fixed; bottom: 25px; right: 25px;
-            background: var(--primary); color: white;
-            width: 55px; height: 55px; border-radius: 50%;
+        /* FLOATING BUTTONS */
+        .btn-float-base {
+            position: fixed; bottom: 30px;
+            width: 50px; height: 50px; border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
-            font-size: 1.5rem; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+            font-size: 1.3rem; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
             cursor: pointer; z-index: 900; transition: transform 0.2s;
             border: none;
         }
-        .add-btn-float:active { transform: scale(0.9); }
+        .btn-float-base:active { transform: scale(0.9); }
 
-        .container { max-width: 600px; margin: 0 auto; display: grid; gap: 15px; }
+        .add-btn-float {
+            right: 25px; /* RIGHT */
+            background: var(--primary); color: white;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+        
+        .logout-float {
+            left: 25px; /* LEFT */
+            background: white; color: var(--danger);
+            border: 2px solid #FEE2E2;
+        }
+
+        .container { display: grid; gap: 15px; }
         
         /* Card Design */
         .card {
@@ -123,11 +141,12 @@
 
         /* PINNED STYLE */
         .card.pinned {
-            border-left: 4px solid #F59E0B; /* Amber Color */
+            border-left: 4px solid #F59E0B;
             background: #FFFBEB;
         }
         .pin-icon {
             font-size: 1.2rem; cursor: pointer; color: #D1D5DB; transition: 0.2s;
+            padding: 5px; /* Bigger touch area */
         }
         .pin-icon.active {
             color: #F59E0B; transform: rotate(45deg);
@@ -165,7 +184,7 @@
             background: white; width: 90%; max-width: 350px; padding: 25px; border-radius: 20px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             transform: scale(0.95); transition: transform 0.2s;
-            max-height: 80vh; display: flex; flex-direction: column;
+            max-height: 85vh; display: flex; flex-direction: column;
         }
         .modal-overlay.active .modal-box { transform: scale(1); }
 
@@ -199,9 +218,9 @@
 
         /* TOAST NOTIFICATION */
         #toast-box {
-            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
-            background: #333; color: white; padding: 12px 20px; border-radius: 30px;
-            font-size: 0.9rem; z-index: 3000; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+            background: #333; color: white; padding: 10px 20px; border-radius: 30px;
+            font-size: 0.85rem; z-index: 3000; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             white-space: nowrap;
         }
         #toast-box.show { display: block; animation: fadeUp 0.3s forwards; }
@@ -241,10 +260,7 @@
                         <h2 id="headerName">User</h2>
                         <p id="headerEmail">user@email.com</p>
                     </div>
-                    <i class="fa-solid fa-pen-to-square" style="font-size: 0.8rem; color: #aaa;"></i>
-                </div>
-                <div class="logout-icon" onclick="confirmLogout()">
-                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <i class="fa-solid fa-pen-to-square" style="font-size: 0.8rem; color: #aaa; margin-left:auto;"></i>
                 </div>
             </div>
 
@@ -256,8 +272,12 @@
 
         <div class="container" id="cardContainer"></div>
 
-        <button class="add-btn-float" onclick="openModal()">
+        <button class="btn-float-base add-btn-float" onclick="openModal()">
             <i class="fa-solid fa-plus"></i>
+        </button>
+
+        <button class="btn-float-base logout-float" onclick="confirmLogout()">
+            <i class="fa-solid fa-power-off"></i>
         </button>
     </div>
 
@@ -345,7 +365,14 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        enableIndexedDbPersistence(db).catch((err) => console.log(err));
+        // Performance: Enable Offline Persistence
+        enableIndexedDbPersistence(db).catch((err) => {
+             if (err.code == 'failed-precondition') {
+                 console.log("Persistence failed: Multiple tabs open");
+             } else if (err.code == 'unimplemented') {
+                 console.log("Persistence not supported by browser");
+             }
+        });
 
         let currentUser = null;
         let isRegisterMode = false;
@@ -377,12 +404,16 @@
             if (user) {
                 document.getElementById('headerEmail').innerText = user.email;
                 document.getElementById('editProfileEmail').value = user.email;
-                await loadUserProfile(user);
+                
+                // Load profile and data in parallel for speed
+                const profilePromise = loadUserProfile(user);
+                const dataPromise = loadUserData(user.uid);
+                
+                await profilePromise;
                 
                 loader.style.display = 'none'; 
                 loginScreen.style.display = 'none';
                 appScreen.style.display = 'block';
-                loadUserData(user.uid); 
             } else {
                 loginScreen.style.display = 'flex';
                 appScreen.style.display = 'none';
@@ -393,28 +424,30 @@
         });
 
         async function loadUserProfile(user) {
-            const userDocRef = doc(db, "user_profiles", user.uid);
-            const userSnap = await getDoc(userDocRef);
-            let displayName = user.displayName || user.email.split('@')[0];
-            let photoData = null;
+            try {
+                const userDocRef = doc(db, "user_profiles", user.uid);
+                const userSnap = await getDoc(userDocRef);
+                let displayName = user.displayName || user.email.split('@')[0];
+                let photoData = null;
 
-            if (userSnap.exists()) {
-                const data = userSnap.data();
-                if(data.name) displayName = data.name;
-                if(data.photoBase64) photoData = data.photoBase64;
-            }
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
+                    if(data.name) displayName = data.name;
+                    if(data.photoBase64) photoData = data.photoBase64;
+                }
 
-            document.getElementById('headerName').innerText = displayName;
-            const avatarEl = document.getElementById('headerAvatar');
-            
-            if (photoData) {
-                avatarEl.innerHTML = `<img src="${photoData}">`;
-                avatarEl.style.background = "none";
-                avatarEl.style.border = "2px solid #fff";
-            } else {
-                avatarEl.innerHTML = displayName.charAt(0).toUpperCase();
-                avatarEl.style.background = "var(--primary)";
-            }
+                document.getElementById('headerName').innerText = displayName;
+                const avatarEl = document.getElementById('headerAvatar');
+                
+                if (photoData) {
+                    avatarEl.innerHTML = `<img src="${photoData}">`;
+                    avatarEl.style.background = "none";
+                    avatarEl.style.border = "2px solid #fff";
+                } else {
+                    avatarEl.innerHTML = displayName.charAt(0).toUpperCase();
+                    avatarEl.style.background = "var(--primary)";
+                }
+            } catch (e) { console.log("Profile Load Error", e); }
         }
 
         // --- PROFILE LOGIC ---
@@ -530,21 +563,25 @@
         // --- DATA LOAD & SORTING ---
         function loadUserData(uid) {
             const q = query(collection(db, "customers"), where("uid", "==", uid));
-            unsubscribe = onSnapshot(q, (snapshot) => {
-                allCustomers = [];
-                snapshot.forEach((doc) => {
-                    allCustomers.push({ id: doc.id, ...doc.data() });
-                });
-                
-                // SORTING: Pinned items first, then Date
-                allCustomers.sort((a, b) => {
-                    const pinA = a.isPinned ? 1 : 0;
-                    const pinB = b.isPinned ? 1 : 0;
-                    if (pinA !== pinB) return pinB - pinA; // Pin desc
-                    return b.createdAt - a.createdAt; // Date desc
-                });
+            // Return promise for parallel loading
+            return new Promise((resolve) => {
+                unsubscribe = onSnapshot(q, (snapshot) => {
+                    allCustomers = [];
+                    snapshot.forEach((doc) => {
+                        allCustomers.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    // SORTING: Pinned items first, then Date
+                    allCustomers.sort((a, b) => {
+                        const pinA = a.isPinned ? 1 : 0;
+                        const pinB = b.isPinned ? 1 : 0;
+                        if (pinA !== pinB) return pinB - pinA; // Pin desc
+                        return b.createdAt - a.createdAt; // Date desc
+                    });
 
-                renderList(allCustomers);
+                    renderList(allCustomers);
+                    resolve();
+                });
             });
         }
 
@@ -560,7 +597,6 @@
         // --- TOGGLE PIN ---
         window.togglePin = async (id, currentStatus) => {
             if (!currentStatus) {
-                // Check Limit if trying to pin
                 const pinnedCount = allCustomers.filter(c => c.isPinned).length;
                 if (pinnedCount >= 3) {
                     showToast("Pin ၃ ခုသာ လုပ်ခွင့်ရှိသည်!");
@@ -609,7 +645,9 @@
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:start;">
                     <div class="card-name">${data.name}</div>
-                    <i class="fa-solid fa-thumbtack pin-icon ${isPinned ? 'active' : ''}" onclick="togglePin('${id}', ${isPinned})"></i>
+                    <div class="pin-icon ${isPinned ? 'active' : ''}" onclick="togglePin('${id}', ${isPinned})">
+                        <i class="fa-solid fa-thumbtack"></i>
+                    </div>
                 </div>
                 <div class="card-info">${infoHtml}</div>
                 
@@ -666,14 +704,13 @@
                 info: info,
                 link: link,
                 createdAt: Date.now(),
-                isPinned: false // Default
+                isPinned: false
             };
 
             try {
                 closeModal();
                 if(id) {
                     const docRef = doc(db, "customers", id);
-                    // Update only specific fields (preserve isPinned)
                     await updateDoc(docRef, { name, info, link });
                     showToast("ပြင်ဆင်ပြီးပါပြီ");
                 } else {
